@@ -1,33 +1,82 @@
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import generics
-from rest_framework.decorators import APIView
-from django.http.response import JsonResponse
+from rest_framework import generics, status
 from .models import Block, Building
 from .serializers import BlockSerializer, BuildingSerializer
 
 
-
-# connect to database
-#connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+SERVER+';DATABASE='+DATABASE+';UID='+USERNAME+';PWD='+PASSWORD)
-
 class BuildingList(generics.ListCreateAPIView):
-    queryset = Building.objects.all();
+    queryset = Building.objects.all()
     serializer_class = BuildingSerializer
 
 class BuildingDetails(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Building.objects.all();
+    queryset = Building.objects.all()
     serializer_class = BuildingSerializer
     
 class BlockList(generics.ListCreateAPIView):
-    queryset = Block.objects.all();
+    queryset = Block.objects.all()
     serializer_class = BlockSerializer
 
 class BlockDetails(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Block.objects.all();
+    queryset = Block.objects.all()
     serializer_class = BlockSerializer
-      
+    
+    
+@api_view(['PATCH'])
+def buildingUpdatePartial(request, pk):
+    
+    try: 
+        building = Building.objects.get(pk=pk)
+    except Building.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    # check which fields to update based on request dataclass
+    
+    fields_to_update = []
+    
+    if "kaek" in request.data:
+        fields_to_update.append("kaek")
+        building.kaek = request.data.get("kaek")
+        
+    # to fix: not updating this field
+    if "perimeter" in request.data:
+        fields_to_update.append("perimeter")
+        building.perimeter = request.data.get("perimeter")
+        
+    if "area" in request.data:
+        fields_to_update.append("area")
+        building.area = request.data.get("area")
+    
+    if "numfloor" in request.data:
+        fields_to_update.append("numfloor")
+        building.numfloor = request.data.get("numfloor")
+        
+    if "height" in request.data:
+        fields_to_update.append("height")
+        building.height = request.data.get("height")
+
+    if "year" in request.data:
+        fields_to_update.append("year")
+        building.year = request.data.get("year")
+        
+    # to fix: not updating this field
+    if "landuse" in request.data:
+        fields_to_update.append("landuse")
+        building.landuse = request.data.get("landuse")
+        
+    if "roof" in request.data:
+        fields_to_update.append("roof")
+        building.roof = request.data.get("roof")
+    
+    # save requested fields
+    try:
+        building.save(update_fields = fields_to_update)
+    except Exception as e:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=e)
+    
+    return Response(status=status.HTTP_200_OK, data=BuildingSerializer(building).data)
+
+    
 @api_view(["GET"])
 def apiOverview(request):
     return Response(
@@ -44,129 +93,4 @@ def apiOverview(request):
                 }
         }
     )
-   
-# # get all buildings
-# @csrf_exempt
-# @api_view(["GET"])
-# def buildingList(request):
-#     return JsonResponse(Building.objects.all(), safe=False)
     
-#     d = {
-#             "id": [],
-#             "area": [],
-#             "perimeter": [],
-#             "kaek": [],
-#             "numFloor": [],
-#             "height": [],
-#             "landUse": [],
-#             "year": [],
-#             "roof": []
-#         }
-
-#     query = f"SELECT id, area, perimeter, kaek, numFloor, height, landUse, year, roof from {TABLE}"
-#     # fetch all relevant data from database
-#     try:
-#         cursor = connection.cursor()
-#         cursor.execute(query)
-#         for row in cursor:
-#             d["id"].append(row[0])
-#             d["area"].append(row[1])
-#             d["perimeter"].append(row[2])
-#             d["kaek"].append(row[3])
-#             d["numFloor"].append(row[4])
-#             d["height"].append(row[5])
-#             d["landUse"].append(row[6])
-#             d["year"].append(row[7])
-#             d["roof"].append(row[8])
-#         cursor.close()
-#     except Exception as e:
-#         return JsonResponse({'message': str(e)}, status=500)
-    
-#     return Response(data = d)
-    
-# # get specific building
-# @api_view(["GET"])
-# def buildingDetail(request, id):
-#     d = {}
-    
-#     # GET request (READ)
-#     query = f"SELECT id, area, perimeter, kaek, numFloor, height, landUse, year, roof from {TABLE} WHERE id={id}"
-#     # fetch all relevant data from database
-#     try:
-#         cursor = connection.cursor()
-#         cursor.execute(query)
-#         for row in cursor:
-#             print(row)
-#             d["id"] = int(row[0])
-#             d["area"] = row[1]
-#             d["perimeter"] = row[2]
-#             d["kaek"] = row[3]
-#             d["numFloor"] = int(row[4])
-#             d["height"] = row[5]
-#             d["landUse"] = row[6]
-#             d["year"] = row[7]
-#             d["roof"] = row[8]
-#         cursor.close()
-#     except Exception as e:
-#         return JsonResponse({'message': str(e)}, status = 500)
-    
-#     return JsonResponse(d, safe=False)
-                
-         
-# @csrf_exempt
-# @api_view(["POST"])
-# def buildingCreate(request):
-#     # POST request (CREATE)
-#     query = f"""INSERT INTO {TABLE} (area, perimeter, kaek, numFloor, height, landUse, year, roof) VALUES
-#             ({request.POST['area']}, {request.POST['perimeter']}, {request.POST['kaek']}, {request.POST['numFloor']},
-#                 {request.POST['height']}, '{request.POST['landUse']}', {request.POST['year']}, '{request.POST['roof']}')""".replace("\n", "").replace("  ", "")
-            
-#     # insert data to table
-#     try:
-#         cursor = connection.cursor()
-#         cursor.execute(query)
-#         connection.commit()
-#         cursor.close()
-#         return JsonResponse("Successfully added record into database", safe=False)
-#     except Exception as e:
-#         return JsonResponse({"message": str(e)}, status = 500)
-        
-
-# @csrf_exempt
-# @api_view(["PUT"])
-# def buildingUpdate(request, id):
-#     # PUT request (UPDATE)
-#     query = f"""UPDATE {TABLE} SET 
-#                     area = {request.POST['area']}, perimeter = {request.POST['perimeter']}, kaek = {request.POST['kaek']},
-#                     numFloor = {request.POST['numFloor']}, height = {request.POST['height']}, landUse = '{request.POST['landUse']}',
-#                     year = {request.POST['year']}, roof = '{request.POST['roof']}'
-#                 WHERE id = {id}""".replace("\n", "").replace("  ", "")
-#     # update specific record
-#     try:
-#         cursor = connection.cursor()
-#         cursor.execute(query)
-#         connection.commit()
-#         cursor.close()
-#     except Exception as e:
-#         return JsonResponse({'message': str(e)}, status = 500)
-    
-#     return Response(f"Successfully updated building with id={id}")
-        
-        
-# @csrf_exempt
-# @api_view(["DELETE"])
-# def buildingDelete(request, id):
-#     # DELETE request     
-#     query = f"DELETE FROM {TABLE} WHERE id={id}"
-#     # delete specific record
-#     try:
-#         cursor = connection.cursor()
-#         cursor.execute(query)
-#         connection.commit()
-#         cursor.close()
-#     except Exception as e:
-#         print(e)
-#         return JsonResponse({'message': str(e)}, status = 500)
-    
-#     return Response(f"Successfully deleted building with id={id}")
-        

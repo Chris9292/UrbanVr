@@ -82,18 +82,6 @@ WSGI_APPLICATION = 'UrbanVr.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    #  azure
-    
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'urbanvr-db', #YOUR_DATABASE_NAME
-    #     'USER': 'Chris92', #YOUR_USER_NAME
-    #     'PASSWORD': 'Chr!$t0tk',#YOUR_DB_PASSWORD
-    #     'HOST': 'urbanvr-db.postgres.database.azure.com', #HOST
-    #     'PORT': '5432', #PORT
-    #     'OPTIONS': {'sslmode': 'require'},
-    # },
-    #local
         'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'thesis', #YOUR_DATABASE_NAME
@@ -103,8 +91,6 @@ DATABASES = {
         'PORT': '5432', #PORT
         'OPTIONS': {'sslmode': 'require'},
     },
-    
-    
 }
 
 
